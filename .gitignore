@@ -1,0 +1,20 @@
+# Secrets
+.env
+data/fyers_token.json
+
+# Logs
+*.log
+logs/
+
+# Data cache
+/data/*.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Reports/outputs
+/reports/*.png
+/reports/*.txt
+/reports/backtests/

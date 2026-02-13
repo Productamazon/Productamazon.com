@@ -1,0 +1,7 @@
+fyers-apiv3
+python-dotenv
+pandas
+requests
+langgraph
+langchain-core
+matplotlib

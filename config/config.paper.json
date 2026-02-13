@@ -1,0 +1,85 @@
+{
+  "mode": "paper",
+  "timezone": "Asia/Kolkata",
+  "universe": "NIFTY50",
+  "candleInterval": "5m",
+  "tradingWindows": {
+    "noTrade": [{"start": "09:15", "end": "09:30"}],
+    "primary": [{"start": "09:30", "end": "11:30"}],
+    "noNewEntriesAfter": "15:00",
+    "forceExitBy": "15:25"
+  },
+  "risk": {
+    "rPerTradeInr": 100,
+    "maxTradesPerDay": 2,
+    "stopAfterLosses": 2,
+    "maxDailyLossInr": 500,
+    "softStopLossInr": 350,
+    "regimeSizing": {"trend": 1.0, "range": 0.6},
+    "notes": "Stricter risk: max 2 trades/day, hard daily loss ₹500. Soft stop at -₹350; only A+ trend trades pass soft-stop gate."
+  },
+  "executionSim": {
+    "slippageBpsEachSide": 10,
+    "roundTripFixedCostInr": 2.0,
+    "notes": "Paper fills include conservative slippage + fixed buffer. Replace with full India charges as needed."
+  },
+  "filters": {
+    "niftySymbol": "NSE:NIFTY50-INDEX"
+  },
+  "strategies": {
+    "ORB": {
+      "enabled": true,
+      "allowLong": true,
+      "allowShort": true,
+      "openingRange": {"start": "09:15", "end": "09:30"},
+      "volumeMultiplier": 1.5,
+      "targetR": 1.5,
+      "timeStopMinutes": 30,
+      "minORRangePct": 0.3,
+      "minORtoATR": 1.1,
+      "stopAtrMult": 0.5
+    },
+    "MEAN_REVERSION": {
+      "enabled": true,
+      "rsiPeriod": 14,
+      "rsiOverbought": 72,
+      "rsiOversold": 28,
+      "vwapAtrDistance": 1.3,
+      "targetR": 1.2,
+      "stopAtrMult": 0.8
+    },
+    "SWING": {
+      "enabled": true,
+      "style": "pullback",
+      "breakoutLookback": 20,
+      "emaFast": 20,
+      "emaSlow": 50,
+      "atrMult": 2.0
+    }
+  },
+  "telegram": {
+    "approvalExpirySeconds": 90,
+    "acceptOnly": ["YES", "NO"],
+    "approvalCooldownMinutes": 30,
+    "gradeThresholds": {"Aplus": 3.2, "A": 2.0},
+    "minApprovalGrade": "A"
+  },
+  "modeTuning": {
+    "learningMode": true,
+    "notes": "Learning mode = prioritize clean paper samples."
+  },
+  "driftGuard": {
+    "lookbackDays": 30,
+    "minAvgR": 0.05,
+    "maxDrawdownR": 3.0,
+    "pauseDays": 2,
+    "drawdownAplusOnlyR": 2.0
+  },
+  "volatilityClamp": {
+    "maxAtrPct": 3.5
+  },
+  "sectorFilter": {
+    "enabled": true,
+    "maxPerSectorPerDay": 1
+  }
+}
