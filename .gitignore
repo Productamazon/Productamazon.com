@@ -17,4 +17,13 @@ __pycache__/
 # Reports/outputs
 /reports/*.png
 /reports/*.txt
+/reports/**/*.json
+/reports/**/*.csv
+/reports/**/*.xlsx
 /reports/backtests/
+
+# Signals/output watchlists
+/signals/*.json
+
+# Cached data
+/data/cache/

@@ -35,6 +35,22 @@ Offline backtests (no network):
 FYERS_OFFLINE=1 python src/backtest_30d.py
 ```
 
+## Quick commands (Makefile)
+```bash
+make install
+make daily
+make backtest
+make backtest-offline
+```
+
+## Scripts
+```bash
+bash scripts/bootstrap.sh
+bash scripts/run_daily.sh
+bash scripts/run_backtest.sh        # online
+bash scripts/run_backtest.sh offline
+```
+
 ## Next
 - Run ORB scanner: `python src/orb_scanner.py`
 - This generates `signals/watchlist_YYYY-MM-DD.json`
