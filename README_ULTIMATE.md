@@ -1,6 +1,6 @@
 # Ultimate README — Trading Bot (Paper Mode)
 
-Last updated: 2026-02-15 14:24 UTC
+Last updated: 2026-02-15 14:28 UTC
 Owner: Mintu (IST) • Assistant: Laddu 🔥
 
 This file is the **handoff summary** for the next session so it can pick up immediately.
@@ -158,6 +158,7 @@ Auto-start on Windows login (created):
 - Profitability extension (learning mode):
   - Nightly sweep now supports multi-parameter grid (vol_mult, min OR %, min OR/ATR, stop ATR, targetR, entry_end).
   - Controlled by env vars: SWEEP_VOL_MULT, SWEEP_MIN_OR_PCT, SWEEP_MIN_OR_ATR, SWEEP_STOP_ATR, SWEEP_TGT_R, SWEEP_ENTRY_END.
+  - Fixed entry-window bug in sweep (exit window now defined correctly).
 - Git hygiene:
   - Added `data/nse/` cache to `.gitignore` (avoid committing live cache).
 - Pushed changes to GitHub (main updated).

@@ -119,6 +119,9 @@ def simulate_one_trade(
     if entry_window.empty:
         return None
 
+    # full window for exits
+    window = df.loc[(df.index >= start_trade_utc) & (df.index <= end_trade_utc)]
+
     entry_ts = None
     entry_row = None
 
