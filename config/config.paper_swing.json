@@ -4,8 +4,18 @@
   "universe": "NIFTY50",
   "candleInterval": "5m",
   "tradingWindows": {
-    "noTrade": [{"start": "09:15", "end": "09:30"}],
-    "primary": [{"start": "09:30", "end": "11:30"}],
+    "noTrade": [
+      {
+        "start": "09:15",
+        "end": "09:30"
+      }
+    ],
+    "primary": [
+      {
+        "start": "09:30",
+        "end": "11:30"
+      }
+    ],
     "noNewEntriesAfter": "15:00",
     "forceExitBy": "15:25"
   },
@@ -15,12 +25,15 @@
     "stopAfterLosses": 2,
     "maxDailyLossInr": 500,
     "softStopLossInr": 350,
-    "regimeSizing": {"trend": 1.0, "range": 0.6},
+    "regimeSizing": {
+      "trend": 1,
+      "range": 0.6
+    },
     "notes": "Stricter risk: max 2 trades/day, hard daily loss ₹500. Soft stop at -₹350; only A+ trend trades pass soft-stop gate."
   },
   "executionSim": {
     "slippageBpsEachSide": 10,
-    "roundTripFixedCostInr": 2.0,
+    "roundTripFixedCostInr": 2,
     "notes": "Paper fills include conservative slippage + fixed buffer. Replace with full India charges as needed."
   },
   "filters": {
@@ -28,15 +41,18 @@
   },
   "strategies": {
     "ORB": {
-      "enabled": true,
+      "enabled": false,
       "allowLong": true,
       "allowShort": true,
-      "openingRange": {"start": "09:15", "end": "09:30"},
+      "openingRange": {
+        "start": "09:15",
+        "end": "09:30"
+      },
       "volumeMultiplier": 1.5,
       "targetR": 1.5,
       "timeStopMinutes": 30,
-      "minORRangePct": 0.25,
-      "minORtoATR": 1.0,
+      "minORRangePct": 0.3,
+      "minORtoATR": 1.1,
       "stopAtrMult": 0.5
     },
     "MEAN_REVERSION": {
@@ -54,14 +70,20 @@
       "breakoutLookback": 20,
       "emaFast": 20,
       "emaSlow": 50,
-      "atrMult": 2.0
+      "atrMult": 2
     }
   },
   "telegram": {
     "approvalExpirySeconds": 90,
-    "acceptOnly": ["YES", "NO"],
+    "acceptOnly": [
+      "YES",
+      "NO"
+    ],
     "approvalCooldownMinutes": 30,
-    "gradeThresholds": {"Aplus": 3.2, "A": 2.0},
+    "gradeThresholds": {
+      "Aplus": 3.2,
+      "A": 2
+    },
     "minApprovalGrade": "A"
   },
   "modeTuning": {
@@ -71,9 +93,9 @@
   "driftGuard": {
     "lookbackDays": 30,
     "minAvgR": 0.05,
-    "maxDrawdownR": 3.0,
+    "maxDrawdownR": 3,
     "pauseDays": 2,
-    "drawdownAplusOnlyR": 2.0
+    "drawdownAplusOnlyR": 2
   },
   "volatilityClamp": {
     "maxAtrPct": 3.5

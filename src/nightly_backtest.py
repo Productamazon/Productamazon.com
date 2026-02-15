@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, date
 from pathlib import Path
@@ -11,13 +12,14 @@ import zoneinfo
 
 from config import load_config
 from fyers_client import get_fyers
-from indicators import to_ohlcv_df, opening_range, atr, vwap
+from indicators import opening_range, atr, vwap
 from sim_costs import apply_slippage
 from charges_india import estimate_equity_intraday_charges
 from universe import load_universe
 from trading_days import last_n_trading_days
 from data_quality import clean_ohlcv_df
 from versioning import build_version_stamp
+from data_cache import get_intraday as get_intraday_cached
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 BASE = Path(__file__).resolve().parents[1]
@@ -26,22 +28,29 @@ OUT_DIR = BASE / "reports" / "nightly"
 
 def fetch_intraday(symbol: str, d: date) -> pd.DataFrame:
     fyers = get_fyers()
-    resp = fyers.history(
-        {
-            "symbol": symbol,
-            "resolution": "5",
-            "date_format": "1",
-            "range_from": d.strftime("%Y-%m-%d"),
-            "range_to": d.strftime("%Y-%m-%d"),
-            "cont_flag": "1",
-        }
-    )
-    if not isinstance(resp, dict) or resp.get("s") != "ok":
-        return pd.DataFrame()
-    candles = resp.get("candles") or []
-    if not candles:
-        return pd.DataFrame()
-    df = to_ohlcv_df(candles)
+    d_str = d.strftime("%Y-%m-%d")
+
+    def _fetch():
+        try:
+            resp = fyers.history(
+                {
+                    "symbol": symbol,
+                    "resolution": "5",
+                    "date_format": "1",
+                    "range_from": d_str,
+                    "range_to": d_str,
+                    "cont_flag": "1",
+                }
+            )
+            if not isinstance(resp, dict) or resp.get("s") != "ok":
+                return []
+            return resp.get("candles") or []
+        except Exception:
+            return []
+
+    df = get_intraday_cached(symbol, d_str, "5", _fetch)
+    if df.empty:
+        return df
     df, _qr = clean_ohlcv_df(df, symbol=symbol)
     return df
 
@@ -171,8 +180,13 @@ def run():
     # Learning mode: micro-sweep only 3 options to avoid overfitting.
     vol_mult_grid = [1.1, 1.2, 1.3]
 
-    dates = last_n_trading_days(7)
+    sweep_days = int(os.environ.get("SWEEP_DAYS", "7"))
+    max_syms = int(os.environ.get("SWEEP_MAX_SYMBOLS", "0"))
+
+    dates = last_n_trading_days(sweep_days)
     universe = load_universe()
+    if max_syms > 0:
+        universe = universe[:max_syms]
 
     best = None
     results = []

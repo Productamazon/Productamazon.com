@@ -92,6 +92,16 @@ def classify_regime(
 
     or_range = float(levels.or_high - levels.or_low)
     or_range_pct = (or_range / close) * 100 if close else 0.0
+
+    # Fallbacks for early-session NaNs (ATR/volume not fully formed yet)
+    if atr_now <= 0:
+        atr_now = or_range if or_range > 0 else 0.0
+    if vol_avg10 <= 0:
+        try:
+            vol_avg10 = float(df.loc[df.index <= or_end_utc]["volume"].mean())
+        except Exception:
+            vol_avg10 = 0.0
+
     or_atr_ratio = (or_range / atr_now) if atr_now else 0.0
 
     trend_dir = "flat"

@@ -1,6 +1,6 @@
 # Ultimate README — Trading Bot (Paper Mode)
 
-Last updated: 2026-02-14 12:37 UTC
+Last updated: 2026-02-15 01:47 UTC
 Owner: Mintu (IST) • Assistant: Laddu 🔥
 
 This file is the **handoff summary** for the next session so it can pick up immediately.
@@ -82,7 +82,8 @@ File: `config/config.paper.json`
   - Hard daily loss ₹500, soft stop ₹350
   - Regime sizing: trend 1.0 / range 0.6
 - **Execution sim:** 10 bps each side + ₹2 fixed
-- **Strategies enabled:** ORB, Mean Reversion, Swing
+- **Strategies enabled:** ORB (tuned), Swing (Mean Reversion disabled)
+- **ORB tuned:** minORRangePct 0.25, minORtoATR 1.0, volumeMultiplier 1.5
 - **Learning mode:** ON
 - **Drift guard:** lookback 30d, pause 2 days on poor stats
 - **Volatility clamp:** max ATR% 3.5
@@ -113,13 +114,16 @@ From `docs/PROJECT_SUMMARY.md`:
 
 Cron jobs live in OpenClaw Gateway state (use `openclaw cron list` to confirm).
 
-## 8) What happened in *this* session (2026‑02‑14)
-Ran 30‑day paper portfolio backtest:
-```
-30D BACKTEST (PAPER PORTFOLIO)
-Trades: 0 | Total R: 0.00 | Avg R/trade: 0.00 | Total PnL: ₹0.00
-Saved: /mnt/g/New folder/New folder/trading_bot/reports/backtests/backtest_30d_2026-02-13_1658.json
-```
+## 8) What happened in *this* session (2026‑02‑15)
+- Disabled Mean Reversion in paper config.
+- ORB tuned (minORRangePct 0.25, minORtoATR 1.0). Tested volumeMultiplier:
+  - **vMult 1.5 (current):** 30D backtest 24 trades, **-7.51R**, PnL ₹-750.51
+    Saved: /mnt/g/New folder/New folder/trading_bot/reports/backtests/backtest_30d_2026-02-15_071901_paper.json
+  - **vMult 1.3:** 30D backtest 24 trades, **-11.46R**, PnL ₹-1146.19
+    Saved: /mnt/g/New folder/New folder/trading_bot/reports/backtests/backtest_30d_2026-02-15_064357_paper.json
+- Candidate test (not applied): minORRangePct 0.2, vMult 1.3 → 30 trades, **-16.15R**, PnL ₹-1614.97
+  Saved: /mnt/g/New folder/New folder/trading_bot/reports/backtests/backtest_30d_2026-02-15_065402_paper_orb_candidate.json
+
 
 ## 9) Useful docs for next session
 - `docs/PROJECT_SUMMARY.md`

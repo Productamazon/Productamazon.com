@@ -3,16 +3,23 @@ from __future__ import annotations
 from datetime import datetime, timedelta, date
 from typing import List
 
+import os
 import zoneinfo
 
 from fyers_client import get_fyers
+from data_cache import get_intraday
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 
 
 def _has_market_data(d: date, symbol: str = "NSE:NIFTY50-INDEX") -> bool:
-    fyers = get_fyers()
     ds = d.strftime("%Y-%m-%d")
+    # Offline mode: rely on cached data if present
+    if os.environ.get("FYERS_OFFLINE", "0") == "1":
+        df = get_intraday(symbol, ds, "5", lambda: [])
+        return not df.empty
+
+    fyers = get_fyers()
     resp = fyers.history(
         {
             "symbol": symbol,

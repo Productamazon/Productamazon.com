@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 import zoneinfo
@@ -41,7 +42,10 @@ def run(days: int = 30) -> dict:
     }
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = OUT_DIR / f"backtest_30d_{datetime.now(tz=IST).strftime('%Y-%m-%d_%H%M')}.json"
+    cfg_path = os.environ.get("TRADINGBOT_CONFIG") or os.environ.get("CONFIG_PATH")
+    tag = Path(cfg_path).stem if cfg_path else "config.paper"
+    tag = tag.replace("config.", "").replace("config_", "").replace("config", "paper")
+    out_path = OUT_DIR / f"backtest_30d_{datetime.now(tz=IST).strftime('%Y-%m-%d_%H%M%S')}_{tag}.json"
     out_path.write_text(json.dumps(out, indent=2))
     return {"summary": out, "path": str(out_path)}
 

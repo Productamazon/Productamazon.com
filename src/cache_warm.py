@@ -10,6 +10,7 @@ from trading_days import last_n_trading_days
 from universe import load_universe
 from fyers_client import get_fyers
 from data_cache import get_intraday, get_daily
+from config import load_config
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 
@@ -23,6 +24,14 @@ def main():
     fyers = get_fyers()
     dates = last_n_trading_days(args.days)
     symbols = load_universe()
+    # include NIFTY index for regime classification
+    try:
+        cfg = load_config()
+        nifty = cfg.get("filters", {}).get("niftySymbol")
+        if nifty and nifty not in symbols:
+            symbols = [nifty] + symbols
+    except Exception:
+        pass
 
     for d in dates:
         d_str = d.isoformat()
