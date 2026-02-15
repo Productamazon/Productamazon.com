@@ -54,6 +54,8 @@ bash scripts/bootstrap.sh
 bash scripts/run_daily.sh
 bash scripts/run_backtest.sh        # online
 bash scripts/run_backtest.sh offline
+bash scripts/fyers_auto_refresh.sh  # optional
+bash scripts/refresh_nse_cache.sh   # weekly cache refresh
 ```
 
 ## Next

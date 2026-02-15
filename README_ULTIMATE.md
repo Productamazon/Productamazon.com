@@ -1,6 +1,6 @@
 # Ultimate README — Trading Bot (Paper Mode)
 
-Last updated: 2026-02-15 13:12 UTC
+Last updated: 2026-02-15 13:19 UTC
 Owner: Mintu (IST) • Assistant: Laddu 🔥
 
 This file is the **handoff summary** for the next session so it can pick up immediately.
@@ -128,6 +128,8 @@ What it does:
 - Health check (token + config)
 - Warm last 5 trading days cache
 - If within 09:30–11:30 IST and market is open (NSE holiday + market status), regenerates watchlist and checks approvals
+- NSE cache refresh script: `scripts/refresh_nse_cache.sh`
+- FYERS auto-refresh script: `scripts/fyers_auto_refresh.sh`
 
 Auto-start on Windows login (created):
 - Startup file: `C:\Users\acer\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\tradingbot_start.cmd`
