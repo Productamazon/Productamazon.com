@@ -1,6 +1,6 @@
 # Ultimate README — Trading Bot (Paper Mode)
 
-Last updated: 2026-02-15 01:47 UTC
+Last updated: 2026-02-15 12:27 UTC
 Owner: Mintu (IST) • Assistant: Laddu 🔥
 
 This file is the **handoff summary** for the next session so it can pick up immediately.
@@ -63,6 +63,9 @@ bash scripts/bootstrap.sh
 bash scripts/run_daily.sh
 bash scripts/run_backtest.sh        # online
 bash scripts/run_backtest.sh offline
+
+# Recovery after laptop restart/power loss
+bash scripts/recover_after_restart.sh
 ```
 
 ## 4) Current configuration snapshot
@@ -114,6 +117,21 @@ From `docs/PROJECT_SUMMARY.md`:
 
 Cron jobs live in OpenClaw Gateway state (use `openclaw cron list` to confirm).
 
+## 7.1) Recovery plan (laptop restart/power loss)
+Run this once after the laptop comes back online:
+```bash
+bash scripts/recover_after_restart.sh
+```
+What it does:
+- Starts OpenClaw gateway if available
+- Health check (token + config)
+- Warm last 5 trading days cache
+- If within 09:30–11:30 IST on a weekday, regenerates watchlist and checks approvals
+
+Auto-start on Windows login (created):
+- Startup file: `C:\Users\acer\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\tradingbot_start.cmd`
+- Runs `scripts/recover_after_restart.sh` on login and logs to `logs/recover_startup.log`
+
 ## 8) What happened in *this* session (2026‑02‑15)
 - Disabled Mean Reversion in paper config.
 - ORB tuned (minORRangePct 0.25, minORtoATR 1.0). Tested volumeMultiplier:
@@ -123,7 +141,17 @@ Cron jobs live in OpenClaw Gateway state (use `openclaw cron list` to confirm).
     Saved: /mnt/g/New folder/New folder/trading_bot/reports/backtests/backtest_30d_2026-02-15_064357_paper.json
 - Candidate test (not applied): minORRangePct 0.2, vMult 1.3 → 30 trades, **-16.15R**, PnL ₹-1614.97
   Saved: /mnt/g/New folder/New folder/trading_bot/reports/backtests/backtest_30d_2026-02-15_065402_paper_orb_candidate.json
-
+- FYERS token refreshed; health_check OK (07:38 IST). Cache warmed for last 5 trading days (2026‑02‑09…13).
+- Recovery + auto‑start: `scripts/recover_after_restart.sh` + Windows Startup task `tradingbot_start.cmd` (logs to `logs/recover_startup.log`).
+- Deep debug fixes:
+  - Watchlist now uses ORB config (minORRangePct, minORtoATR, volumeMultiplier) instead of hardcoded defaults.
+  - ORB scanner now uses cached intraday data (offline-friendly) and applies OR/ATR filter.
+- Pushed changes to GitHub (commit 5aec19f on main).
+- Adobe Express research links saved:
+  - https://developer.adobe.com/express/
+  - https://developer.adobe.com/express/add-ons/
+  - https://helpx.adobe.com/in/express/web/add-ons-and-integrations/add-ons-overview.html
+  - https://github.com/AdobeDocs/express-add-on-samples
 
 ## 9) Useful docs for next session
 - `docs/PROJECT_SUMMARY.md`

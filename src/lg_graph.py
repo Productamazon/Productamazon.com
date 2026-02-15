@@ -24,6 +24,7 @@ from watchlist_format import load_items, fmt
 from approval_monitor import main as approval_main
 from daily_report import main as daily_main
 from nightly_backtest import run as nightly_run
+from config import load_config
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 BASE = Path(__file__).resolve().parents[1]
@@ -31,7 +32,18 @@ BASE = Path(__file__).resolve().parents[1]
 
 def node_watchlist(state: TradingState) -> TradingState:
     d = datetime.now(tz=IST).date()
-    signals = scan_orb_for_date(d)
+    cfg = load_config()
+    orb = cfg.get("strategies", {}).get("ORB", {})
+    vol_mult = float(orb.get("volumeMultiplier", 1.2))
+    min_or_pct = float(orb.get("minORRangePct", 0.15))
+    min_or_atr = float(orb.get("minORtoATR", 0.0))
+
+    signals = scan_orb_for_date(
+        d,
+        volume_multiplier=vol_mult,
+        min_or_range_pct=min_or_pct,
+        min_or_atr_ratio=min_or_atr,
+    )
     out = BASE / "signals" / f"watchlist_{d.strftime('%Y-%m-%d')}.json"
     save_watchlist(signals, out, top_n=15)
 

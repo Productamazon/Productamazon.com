@@ -13,6 +13,7 @@ from fyers_client import get_fyers
 from indicators import to_ohlcv_df, atr, opening_range
 from universe import load_universe
 from data_quality import clean_ohlcv_df
+from data_cache import get_intraday
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 
@@ -38,22 +39,26 @@ def _utc_ts(d: date, t: time) -> pd.Timestamp:
 
 def fetch_intraday_5m(symbol: str, d: date) -> pd.DataFrame:
     fyers = get_fyers()
-    data = {
-        "symbol": symbol,
-        "resolution": "5",
-        "date_format": "1",
-        "range_from": d.strftime("%Y-%m-%d"),
-        "range_to": d.strftime("%Y-%m-%d"),
-        "cont_flag": "1",
-    }
-    resp = fyers.history(data)
-    if not isinstance(resp, dict) or resp.get("s") != "ok":
-        # Common: invalid symbol for FYERS; skip gracefully.
-        return pd.DataFrame()
-    candles = resp.get("candles") or []
-    if not candles:
-        return pd.DataFrame()
-    df = to_ohlcv_df(candles)
+    d_str = d.strftime("%Y-%m-%d")
+
+    def _fetch():
+        data = {
+            "symbol": symbol,
+            "resolution": "5",
+            "date_format": "1",
+            "range_from": d_str,
+            "range_to": d_str,
+            "cont_flag": "1",
+        }
+        resp = fyers.history(data)
+        if not isinstance(resp, dict) or resp.get("s") != "ok":
+            # Common: invalid symbol for FYERS; skip gracefully.
+            return []
+        return resp.get("candles") or []
+
+    df = get_intraday(symbol, d_str, "5", _fetch)
+    if df.empty:
+        return df
     df, _qr = clean_ohlcv_df(df, symbol=symbol)
     return df
 
@@ -62,10 +67,12 @@ def scan_orb_for_date(
     d: date,
     volume_multiplier: float = 1.2,
     min_or_range_pct: float = 0.15,
+    min_or_atr_ratio: float = 0.0,
 ) -> list[ORBSignal]:
     """Scan NIFTY50 for ORB breakout candidates.
 
     min_or_range_pct: minimum opening range size (% of price) to avoid ultra-tight noisy ranges.
+    min_or_atr_ratio: minimum OR/ATR ratio to avoid ultra-tight ranges vs volatility.
     """
 
     or_start = _utc_ts(d, time(9, 15))
@@ -82,6 +89,9 @@ def scan_orb_for_date(
         if levels is None:
             continue
 
+        df = df.copy()
+        df["atr"] = atr(df, 14)
+
         last = df.iloc[-1]
         last_close = float(last["close"])
         last_vol = float(last["volume"])
@@ -90,6 +100,19 @@ def scan_orb_for_date(
         or_range = levels.or_high - levels.or_low
         if last_close > 0:
             if (or_range / last_close) * 100 < min_or_range_pct:
+                continue
+
+        # OR/ATR filter (use ATR at or_end; fallback to OR range if ATR not formed)
+        if min_or_atr_ratio > 0:
+            try:
+                or_row = df.loc[df.index >= or_end].iloc[0]
+                atr_now = float(or_row.get("atr", 0.0))
+            except Exception:
+                atr_now = 0.0
+            if atr_now <= 0:
+                atr_now = or_range if or_range > 0 else 0.0
+            or_atr_ratio = (or_range / atr_now) if atr_now else 0.0
+            if or_atr_ratio < min_or_atr_ratio:
                 continue
 
         vol_avg10 = float(df["volume"].tail(10).mean())

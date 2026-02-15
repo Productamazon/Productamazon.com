@@ -15,8 +15,11 @@ This folder is the implementation workspace for **Ultimate plan v2.1 (Paper Mode
 - `docs/` – notes/specs
 
 ## Current status
-- Folder structure created.
-- Paper config template created: `config/config.paper.json`
+- Paper config tuned (ORB active, MR disabled).
+- Daily/weekly automation via OpenClaw cron.
+- Recovery + auto-start script present.
+
+See **README_ULTIMATE.md** for full operational handoff.
 
 ## FYERS status
 - Auth + token saved: `data/fyers_token.json`
