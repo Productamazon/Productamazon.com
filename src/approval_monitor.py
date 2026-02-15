@@ -465,6 +465,15 @@ def main():
     if not in_trade_window(now):
         return
 
+    orb_cfg = load_config().get("strategies", {}).get("ORB", {})
+    entry_end = str(orb_cfg.get("entryEnd", "11:30"))
+    try:
+        end_h, end_m = map(int, entry_end.split(":"))
+        if now.timetz().replace(tzinfo=None) > time(end_h, end_m):
+            return
+    except Exception:
+        pass
+
     # Drift guard (pause if flagged)
     rs = load_risk_state()
     paused_until = rs.get("paused_until")

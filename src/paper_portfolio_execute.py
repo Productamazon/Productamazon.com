@@ -84,6 +84,9 @@ def simulate_orb_trade(
     or_start: str = "09:15",
     or_end: str = "09:30",
     stop_atr_mult: float = 0.5,
+    min_or_range_pct: float = 0.0,
+    min_or_atr_ratio: float = 0.0,
+    entry_end_ist: str = "11:30",
 ) -> Optional[TradeResult]:
     if df.empty or len(df) < 20:
         return None
@@ -99,8 +102,34 @@ def simulate_orb_trade(
     df["atr"] = atr(df, 14)
     df["vol_avg10"] = df["volume"].rolling(10).mean()
 
+    # OR filters
+    try:
+        or_close = float(df.loc[df.index <= or_end_utc].iloc[-1]["close"])
+    except Exception:
+        or_close = 0.0
+    or_range = float(levels.or_high - levels.or_low)
+    if min_or_range_pct > 0 and or_close > 0:
+        if (or_range / or_close) * 100 < min_or_range_pct:
+            return None
+    if min_or_atr_ratio > 0:
+        try:
+            or_row = df.loc[df.index >= or_end_utc].iloc[0]
+            atr_now = float(or_row.get("atr", 0.0))
+        except Exception:
+            atr_now = 0.0
+        if atr_now <= 0:
+            return None
+        if (or_range / atr_now) < min_or_atr_ratio:
+            return None
+
     start_trade_utc = or_end_utc
+    entry_end_time = datetime.strptime(entry_end_ist, "%H:%M").time()
+    entry_end_utc = pd.Timestamp(datetime.combine(d, entry_end_time).replace(tzinfo=IST).astimezone(timezone.utc))
     end_trade_utc = pd.Timestamp(datetime.combine(d, time(15, 20)).replace(tzinfo=IST).astimezone(timezone.utc))
+
+    entry_window = df.loc[(df.index >= start_trade_utc) & (df.index <= entry_end_utc)]
+    if entry_window.empty:
+        return None
 
     window = df.loc[(df.index >= start_trade_utc) & (df.index <= end_trade_utc)]
     if window.empty:
@@ -109,7 +138,7 @@ def simulate_orb_trade(
     entry_idx = None
     entry_row = None
 
-    for ts, row in window.iterrows():
+    for ts, row in entry_window.iterrows():
         if pd.isna(row["vol_avg10"]) or pd.isna(row["atr"]):
             continue
         if direction == "BUY":
@@ -255,6 +284,9 @@ def run_day(d: date) -> dict:
                     or_start=orb_cfg.get("openingRange", {}).get("start", "09:15"),
                     or_end=orb_cfg.get("openingRange", {}).get("end", "09:30"),
                     stop_atr_mult=float(orb_cfg.get("stopAtrMult", 0.5)),
+                    min_or_range_pct=float(orb_cfg.get("minORRangePct", 0.18)),
+                    min_or_atr_ratio=float(orb_cfg.get("minORtoATR", 0.8)),
+                    entry_end_ist=str(orb_cfg.get("entryEnd", "11:30")),
                 )
                 if tr:
                     tr.symbol = sym
@@ -273,6 +305,9 @@ def run_day(d: date) -> dict:
                     or_start=orb_cfg.get("openingRange", {}).get("start", "09:15"),
                     or_end=orb_cfg.get("openingRange", {}).get("end", "09:30"),
                     stop_atr_mult=float(orb_cfg.get("stopAtrMult", 0.5)),
+                    min_or_range_pct=float(orb_cfg.get("minORRangePct", 0.18)),
+                    min_or_atr_ratio=float(orb_cfg.get("minORtoATR", 0.8)),
+                    entry_end_ist=str(orb_cfg.get("entryEnd", "11:30")),
                 )
                 if tr:
                     tr.symbol = sym

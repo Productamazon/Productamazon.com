@@ -1,6 +1,6 @@
 # Ultimate README — Trading Bot (Paper Mode)
 
-Last updated: 2026-02-15 14:28 UTC
+Last updated: 2026-02-15 18:42 UTC
 Owner: Mintu (IST) • Assistant: Laddu 🔥
 
 This file is the **handoff summary** for the next session so it can pick up immediately.
@@ -87,6 +87,7 @@ File: `config/config.paper.json`
 - **Execution sim:** 10 bps each side + ₹2 fixed
 - **Strategies enabled:** ORB (tuned), Swing (Mean Reversion disabled)
 - **ORB tuned:** minORRangePct 0.25, minORtoATR 1.0, volumeMultiplier 1.5
+- **ORB entryEnd:** 11:30 (configurable)
 - **Learning mode:** ON
 - **Drift guard:** lookback 30d, pause 2 days on poor stats
 - **Volatility clamp:** max ATR% 3.5
@@ -159,6 +160,9 @@ Auto-start on Windows login (created):
   - Nightly sweep now supports multi-parameter grid (vol_mult, min OR %, min OR/ATR, stop ATR, targetR, entry_end).
   - Controlled by env vars: SWEEP_VOL_MULT, SWEEP_MIN_OR_PCT, SWEEP_MIN_OR_ATR, SWEEP_STOP_ATR, SWEEP_TGT_R, SWEEP_ENTRY_END.
   - Fixed entry-window bug in sweep (exit window now defined correctly).
+- ORB entryEnd support:
+  - Added `entryEnd` to ORB config, enforced in approval monitor + backtest engine.
+  - Candidate config for peak learning: `config/config.paper_orb_peak.json` (entryEnd 10:30, vol_mult 1.4, stopAtr 0.6).
 - Git hygiene:
   - Added `data/nse/` cache to `.gitignore` (avoid committing live cache).
 - Pushed changes to GitHub (main updated).
