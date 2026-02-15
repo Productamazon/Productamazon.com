@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 import zoneinfo
+import os
 
 from fyers_health import check_fyers_token
 
@@ -31,6 +32,19 @@ def main():
         return
 
     auth = check_fyers_token()
+    if not auth.ok and os.environ.get("FYERS_AUTO_REFRESH", "0") == "1":
+        try:
+            from fyers_auto_refresh import refresh_access_token
+
+            ok, msg = refresh_access_token()
+            if ok:
+                auth = check_fyers_token()
+            else:
+                auth = auth  # keep original
+                print(f"FYERS AUTO REFRESH: FAIL - {msg}")
+        except Exception as e:
+            print(f"FYERS AUTO REFRESH: EXCEPTION - {e}")
+
     if not auth.ok:
         print("TRADING_BOT_HEALTH: FAIL")
         print(f"Time(IST): {now}")

@@ -1,6 +1,6 @@
 # Ultimate README — Trading Bot (Paper Mode)
 
-Last updated: 2026-02-15 12:27 UTC
+Last updated: 2026-02-15 13:12 UTC
 Owner: Mintu (IST) • Assistant: Laddu 🔥
 
 This file is the **handoff summary** for the next session so it can pick up immediately.
@@ -104,6 +104,7 @@ File: `config/config.paper.json`
 ## 6) FYERS status
 - Token stored: `data/fyers_token.json`
 - Validated universe cache: `data/valid_universe.json`
+- Optional auto-refresh: `FYERS_AUTO_REFRESH=1` + TOTP/PIN vars (local only)
 
 **Do not paste secrets into chat.** Use `.env` locally.
 
@@ -126,7 +127,7 @@ What it does:
 - Starts OpenClaw gateway if available
 - Health check (token + config)
 - Warm last 5 trading days cache
-- If within 09:30–11:30 IST on a weekday, regenerates watchlist and checks approvals
+- If within 09:30–11:30 IST and market is open (NSE holiday + market status), regenerates watchlist and checks approvals
 
 Auto-start on Windows login (created):
 - Startup file: `C:\Users\acer\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\tradingbot_start.cmd`
@@ -146,7 +147,12 @@ Auto-start on Windows login (created):
 - Deep debug fixes:
   - Watchlist now uses ORB config (minORRangePct, minORtoATR, volumeMultiplier) instead of hardcoded defaults.
   - ORB scanner now uses cached intraday data (offline-friendly) and applies OR/ATR filter.
-- Pushed changes to GitHub (commit 5aec19f on main).
+- Market-closed guards + NSE cache:
+  - NSE holiday calendar cache + market status cache (UA helper).
+  - Watchlist/approval monitor skip when market closed/holiday.
+- Optional FYERS auto-refresh:
+  - `src/fyers_auto_refresh.py` (TOTP + PIN) and `FYERS_AUTO_REFRESH=1` in health_check.
+- Pushed changes to GitHub (main updated).
 - Adobe Express research links saved:
   - https://developer.adobe.com/express/
   - https://developer.adobe.com/express/add-ons/

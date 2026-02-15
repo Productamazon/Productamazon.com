@@ -3,12 +3,19 @@ from __future__ import annotations
 import io
 import sys
 from contextlib import redirect_stdout
+from datetime import datetime
+import zoneinfo
 
 from lg_graph import build_graph
 from fyers_health import check_fyers_token
+from trading_days import is_trading_day, is_market_open
 
+IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 
 def run_watchlist() -> str:
+    now = datetime.now(tz=IST)
+    if not is_trading_day(now.date()) or not is_market_open(now):
+        return "Market closed - watchlist skipped"
     h = check_fyers_token()
     if not h.ok:
         return f"ALERT: {h.message}"
@@ -33,6 +40,9 @@ def run_nightly() -> str:
 
 
 def run_approval_monitor() -> str:
+    now = datetime.now(tz=IST)
+    if not is_trading_day(now.date()) or not is_market_open(now):
+        return ""
     h = check_fyers_token()
     if not h.ok:
         return f"ALERT: {h.message}"

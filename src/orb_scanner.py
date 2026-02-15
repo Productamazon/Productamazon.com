@@ -148,7 +148,7 @@ def scan_orb_for_date(
     return results
 
 
-def save_watchlist(signals: list[ORBSignal], out_path: Path, top_n: int = 15) -> None:
+def save_watchlist(signals: list[ORBSignal], out_path: Path, top_n: int = 15, notes: str | None = None) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "generated_at_ist": datetime.now(tz=IST).strftime("%Y-%m-%d %H:%M:%S"),
@@ -156,6 +156,8 @@ def save_watchlist(signals: list[ORBSignal], out_path: Path, top_n: int = 15) ->
         "top_n": top_n,
         "items": [s.__dict__ for s in signals[:top_n]],
     }
+    if notes:
+        payload["notes"] = notes
     out_path.write_text(json.dumps(payload, indent=2))
 
 

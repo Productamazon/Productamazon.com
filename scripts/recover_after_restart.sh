@@ -35,12 +35,17 @@ import sys
 
 sys.path.append('src')
 from lg_run import run_watchlist, run_approval_monitor
+from trading_days import is_trading_day, is_market_open
 
 IST = zoneinfo.ZoneInfo('Asia/Kolkata')
 now = datetime.now(IST)
 
-if now.weekday() >= 5:
-    print('[recover] Weekend: skip watchlist/approvals')
+if not is_trading_day(now.date()):
+    print('[recover] Holiday/weekend: skip watchlist/approvals')
+    raise SystemExit(0)
+
+if not is_market_open(now):
+    print('[recover] Market closed: skip watchlist/approvals')
     raise SystemExit(0)
 
 # Only run during active window (approx 09:30–11:30 IST)

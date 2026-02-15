@@ -19,6 +19,7 @@ from pending_approval import PendingApproval, save_pending
 from regime import classify_regime
 from speed_filters import prefilter_symbols
 from pathlib import Path
+from trading_days import is_trading_day, is_market_open
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 BASE = Path(__file__).resolve().parents[1]
@@ -457,6 +458,10 @@ def format_approval(cand: dict) -> str:
 
 def main():
     now = datetime.now(tz=IST)
+    if not is_trading_day(now.date()):
+        return
+    if not is_market_open(now):
+        return
     if not in_trade_window(now):
         return
 

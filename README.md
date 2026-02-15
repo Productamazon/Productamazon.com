@@ -16,8 +16,10 @@ This folder is the implementation workspace for **Ultimate plan v2.1 (Paper Mode
 
 ## Current status
 - Paper config tuned (ORB active, MR disabled).
+- Market-closed guard (NSE holiday + market status cache).
 - Daily/weekly automation via OpenClaw cron.
 - Recovery + auto-start script present.
+- Optional FYERS auto-refresh path (TOTP + PIN).
 
 See **README_ULTIMATE.md** for full operational handoff.
 

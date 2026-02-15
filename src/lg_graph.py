@@ -25,18 +25,40 @@ from approval_monitor import main as approval_main
 from daily_report import main as daily_main
 from nightly_backtest import run as nightly_run
 from config import load_config
+from trading_days import is_trading_day, is_market_open
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 BASE = Path(__file__).resolve().parents[1]
 
 
 def node_watchlist(state: TradingState) -> TradingState:
-    d = datetime.now(tz=IST).date()
+    now = datetime.now(tz=IST)
+    d = now.date()
     cfg = load_config()
     orb = cfg.get("strategies", {}).get("ORB", {})
     vol_mult = float(orb.get("volumeMultiplier", 1.2))
     min_or_pct = float(orb.get("minORRangePct", 0.15))
     min_or_atr = float(orb.get("minORtoATR", 0.0))
+
+    out = BASE / "signals" / f"watchlist_{d.strftime('%Y-%m-%d')}.json"
+
+    # Market closed guard
+    if not is_trading_day(d):
+        notes = "Market closed (holiday/weekend) - watchlist skipped"
+        save_watchlist([], out, top_n=15, notes=notes)
+        state["date"] = d.strftime("%Y-%m-%d")
+        state["generated_at_ist"] = now.strftime("%Y-%m-%d %H:%M:%S")
+        state["watchlist_path"] = str(out)
+        state["watchlist_text"] = notes
+        return state
+    if not is_market_open(now):
+        notes = "Market closed - watchlist skipped"
+        save_watchlist([], out, top_n=15, notes=notes)
+        state["date"] = d.strftime("%Y-%m-%d")
+        state["generated_at_ist"] = now.strftime("%Y-%m-%d %H:%M:%S")
+        state["watchlist_path"] = str(out)
+        state["watchlist_text"] = notes
+        return state
 
     signals = scan_orb_for_date(
         d,
@@ -44,12 +66,11 @@ def node_watchlist(state: TradingState) -> TradingState:
         min_or_range_pct=min_or_pct,
         min_or_atr_ratio=min_or_atr,
     )
-    out = BASE / "signals" / f"watchlist_{d.strftime('%Y-%m-%d')}.json"
     save_watchlist(signals, out, top_n=15)
 
     items = load_items(out)
     state["date"] = d.strftime("%Y-%m-%d")
-    state["generated_at_ist"] = datetime.now(tz=IST).strftime("%Y-%m-%d %H:%M:%S")
+    state["generated_at_ist"] = now.strftime("%Y-%m-%d %H:%M:%S")
     state["watchlist_path"] = str(out)
     state["watchlist_text"] = fmt(items, top_n=10)
     return state
