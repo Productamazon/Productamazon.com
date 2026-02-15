@@ -24,7 +24,8 @@
     "notes": "Paper fills include conservative slippage + fixed buffer. Replace with full India charges as needed."
   },
   "filters": {
-    "niftySymbol": "NSE:NIFTY50-INDEX"
+    "niftySymbol": "NSE:NIFTY50-INDEX",
+    "requireNiftyVwap": false
   },
   "strategies": {
     "ORB": {
@@ -38,6 +39,8 @@
       "timeStopMinutes": 30,
       "minORRangePct": 0.25,
       "minORtoATR": 1.0,
+      "maxORRangePct": 0.0,
+      "maxORtoATR": 0.0,
       "stopAtrMult": 0.5
     },
     "MEAN_REVERSION": {

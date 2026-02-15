@@ -86,7 +86,11 @@ def simulate_orb_trade(
     stop_atr_mult: float = 0.5,
     min_or_range_pct: float = 0.0,
     min_or_atr_ratio: float = 0.0,
+    max_or_range_pct: float = 0.0,
+    max_or_atr_ratio: float = 0.0,
     entry_end_ist: str = "11:30",
+    require_nifty_vwap: bool = False,
+    nifty_df: Optional[pd.DataFrame] = None,
 ) -> Optional[TradeResult]:
     if df.empty or len(df) < 20:
         return None
@@ -111,7 +115,10 @@ def simulate_orb_trade(
     if min_or_range_pct > 0 and or_close > 0:
         if (or_range / or_close) * 100 < min_or_range_pct:
             return None
-    if min_or_atr_ratio > 0:
+    if max_or_range_pct > 0 and or_close > 0:
+        if (or_range / or_close) * 100 > max_or_range_pct:
+            return None
+    if min_or_atr_ratio > 0 or max_or_atr_ratio > 0:
         try:
             or_row = df.loc[df.index >= or_end_utc].iloc[0]
             atr_now = float(or_row.get("atr", 0.0))
@@ -119,7 +126,9 @@ def simulate_orb_trade(
             atr_now = 0.0
         if atr_now <= 0:
             return None
-        if (or_range / atr_now) < min_or_atr_ratio:
+        if min_or_atr_ratio > 0 and (or_range / atr_now) < min_or_atr_ratio:
+            return None
+        if max_or_atr_ratio > 0 and (or_range / atr_now) > max_or_atr_ratio:
             return None
 
     start_trade_utc = or_end_utc
@@ -153,6 +162,18 @@ def simulate_orb_trade(
 
     if entry_idx is None or entry_row is None:
         return None
+
+    if require_nifty_vwap and nifty_df is not None and not nifty_df.empty:
+        ndf = nifty_df.copy()
+        ndf["vwap"] = vwap(ndf)
+        ndf2 = ndf.loc[ndf.index <= entry_idx]
+        if ndf2.empty:
+            return None
+        nrow = ndf2.iloc[-1]
+        if direction == "BUY" and float(nrow["close"]) < float(nrow["vwap"]):
+            return None
+        if direction == "SELL" and float(nrow["close"]) > float(nrow["vwap"]):
+            return None
 
     entry_raw = float(entry_row["close"])
     atr_now = float(entry_row["atr"]) if not pd.isna(entry_row["atr"]) else 0.0
@@ -256,6 +277,9 @@ def run_day(d: date) -> dict:
         rvol_mult=float(orb_cfg.get("volumeMultiplier", 1.2)),
     )
 
+    require_nifty_vwap = bool(flt_cfg.get("requireNiftyVwap", False))
+    nifty_df = fetch_intraday(nifty_symbol, d) if require_nifty_vwap else None
+
     regime_sizing = risk_cfg.get("regimeSizing", {"trend": 1.0, "range": 0.7})
     r_inr = r_inr_base * float(regime_sizing.get(reg.regime, 1.0))
 
@@ -286,7 +310,11 @@ def run_day(d: date) -> dict:
                     stop_atr_mult=float(orb_cfg.get("stopAtrMult", 0.5)),
                     min_or_range_pct=float(orb_cfg.get("minORRangePct", 0.18)),
                     min_or_atr_ratio=float(orb_cfg.get("minORtoATR", 0.8)),
+                    max_or_range_pct=float(orb_cfg.get("maxORRangePct", 0.0)),
+                    max_or_atr_ratio=float(orb_cfg.get("maxORtoATR", 0.0)),
                     entry_end_ist=str(orb_cfg.get("entryEnd", "11:30")),
+                    require_nifty_vwap=require_nifty_vwap,
+                    nifty_df=nifty_df,
                 )
                 if tr:
                     tr.symbol = sym
@@ -307,7 +335,11 @@ def run_day(d: date) -> dict:
                     stop_atr_mult=float(orb_cfg.get("stopAtrMult", 0.5)),
                     min_or_range_pct=float(orb_cfg.get("minORRangePct", 0.18)),
                     min_or_atr_ratio=float(orb_cfg.get("minORtoATR", 0.8)),
+                    max_or_range_pct=float(orb_cfg.get("maxORRangePct", 0.0)),
+                    max_or_atr_ratio=float(orb_cfg.get("maxORtoATR", 0.0)),
                     entry_end_ist=str(orb_cfg.get("entryEnd", "11:30")),
+                    require_nifty_vwap=require_nifty_vwap,
+                    nifty_df=nifty_df,
                 )
                 if tr:
                     tr.symbol = sym

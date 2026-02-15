@@ -68,6 +68,8 @@ def scan_orb_for_date(
     volume_multiplier: float = 1.2,
     min_or_range_pct: float = 0.15,
     min_or_atr_ratio: float = 0.0,
+    max_or_range_pct: float = 0.0,
+    max_or_atr_ratio: float = 0.0,
 ) -> list[ORBSignal]:
     """Scan NIFTY50 for ORB breakout candidates.
 
@@ -96,14 +98,16 @@ def scan_orb_for_date(
         last_close = float(last["close"])
         last_vol = float(last["volume"])
 
-        # avoid tiny opening range
+        # opening range size filters
         or_range = levels.or_high - levels.or_low
         if last_close > 0:
             if (or_range / last_close) * 100 < min_or_range_pct:
                 continue
+            if max_or_range_pct > 0 and (or_range / last_close) * 100 > max_or_range_pct:
+                continue
 
         # OR/ATR filter (use ATR at or_end; fallback to OR range if ATR not formed)
-        if min_or_atr_ratio > 0:
+        if min_or_atr_ratio > 0 or max_or_atr_ratio > 0:
             try:
                 or_row = df.loc[df.index >= or_end].iloc[0]
                 atr_now = float(or_row.get("atr", 0.0))
@@ -112,7 +116,9 @@ def scan_orb_for_date(
             if atr_now <= 0:
                 atr_now = or_range if or_range > 0 else 0.0
             or_atr_ratio = (or_range / atr_now) if atr_now else 0.0
-            if or_atr_ratio < min_or_atr_ratio:
+            if min_or_atr_ratio > 0 and or_atr_ratio < min_or_atr_ratio:
+                continue
+            if max_or_atr_ratio > 0 and or_atr_ratio > max_or_atr_ratio:
                 continue
 
         vol_avg10 = float(df["volume"].tail(10).mean())

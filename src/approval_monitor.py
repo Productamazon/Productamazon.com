@@ -173,11 +173,21 @@ def find_best_signal(now_ist: datetime) -> Optional[dict]:
 
     vol_mult = float(orb.get("volumeMultiplier", 1.2))
     tgt_r = float(orb.get("targetR", 1.5))
+    min_or_pct = float(orb.get("minORRangePct", 0.18))
+    min_or_atr = float(orb.get("minORtoATR", 0.8))
+    max_or_pct = float(orb.get("maxORRangePct", 0.0))
+    max_or_atr = float(orb.get("maxORtoATR", 0.0))
     r_inr_base = float(risk.get("rPerTradeInr", 125))
     slip_bps = float(sim.get("slippageBpsEachSide", 10))
     fixed_cost = float(sim.get("roundTripFixedCostInr", 2.0))
 
     nifty_symbol = str(flt.get("niftySymbol", "NSE:NIFTY50-INDEX"))
+    require_nifty_vwap = bool(flt.get("requireNiftyVwap", False))
+    nifty_df = fetch_intraday(nifty_symbol, d) if require_nifty_vwap else None
+    if require_nifty_vwap and nifty_df is not None and not nifty_df.empty:
+        nifty_df = nifty_df.copy()
+        nifty_df["vwap"] = vwap(nifty_df)
+
     grade_thresholds = cfg.get("telegram", {}).get("gradeThresholds", {"Aplus": 2.0, "A": 1.2})
     vol_clamp = cfg.get("volatilityClamp", {"maxAtrPct": 4.0})
     sector_cfg = cfg.get("sectorFilter", {"enabled": False})
@@ -225,6 +235,30 @@ def find_best_signal(now_ist: datetime) -> Optional[dict]:
             if levels is None:
                 continue
 
+            # OR filters
+            try:
+                or_close = float(df.loc[df.index <= or_end_utc].iloc[-1]["close"])
+            except Exception:
+                or_close = 0.0
+            or_range = float(levels.or_high - levels.or_low)
+            if or_close > 0:
+                if min_or_pct > 0 and (or_range / or_close) * 100 < min_or_pct:
+                    continue
+                if max_or_pct > 0 and (or_range / or_close) * 100 > max_or_pct:
+                    continue
+            if min_or_atr > 0 or max_or_atr > 0:
+                try:
+                    or_row = df.loc[df.index >= or_end_utc].iloc[0]
+                    atr_now = float(or_row.get("atr", 0.0))
+                except Exception:
+                    atr_now = 0.0
+                if atr_now <= 0:
+                    continue
+                if min_or_atr > 0 and (or_range / atr_now) < min_or_atr:
+                    continue
+                if max_or_atr > 0 and (or_range / atr_now) > max_or_atr:
+                    continue
+
             window = df.loc[(df.index >= or_end_utc) & (df.index <= now_utc)]
             if window.empty:
                 continue
@@ -237,8 +271,20 @@ def find_best_signal(now_ist: datetime) -> Optional[dict]:
                 atr_pct = (float(row["atr"]) / float(row["close"])) * 100 if float(row["close"]) else 0.0
                 if atr_pct > float(vol_clamp.get("maxAtrPct", 4.0)):
                     continue
+
+                # NIFTY VWAP filter (optional)
+                nifty_ok_long = True
+                nifty_ok_short = True
+                if require_nifty_vwap and nifty_df is not None and not nifty_df.empty:
+                    ndf2 = nifty_df.loc[nifty_df.index <= ts]
+                    if ndf2.empty:
+                        continue
+                    nrow = ndf2.iloc[-1]
+                    nifty_ok_long = float(nrow["close"]) >= float(nrow["vwap"])
+                    nifty_ok_short = float(nrow["close"]) <= float(nrow["vwap"])
+
                 # Long ORB
-                if bool(orb.get("allowLong", True)) and float(row["close"]) > levels.or_high and float(row["volume"]) >= vol_mult * float(row["vol_avg10"]):
+                if bool(orb.get("allowLong", True)) and nifty_ok_long and float(row["close"]) > levels.or_high and float(row["volume"]) >= vol_mult * float(row["vol_avg10"]):
                     entry_raw = float(row["close"])
                     atr_now = float(row["atr"])
                     stop = float(levels.or_high - float(orb.get("stopAtrMult", 0.5)) * atr_now)
@@ -279,7 +325,7 @@ def find_best_signal(now_ist: datetime) -> Optional[dict]:
                     break
 
                 # Short ORB
-                if bool(orb.get("allowShort", True)) and float(row["close"]) < levels.or_low and float(row["volume"]) >= vol_mult * float(row["vol_avg10"]):
+                if bool(orb.get("allowShort", True)) and nifty_ok_short and float(row["close"]) < levels.or_low and float(row["volume"]) >= vol_mult * float(row["vol_avg10"]):
                     entry_raw = float(row["close"])
                     atr_now = float(row["atr"])
                     stop = float(levels.or_low + float(orb.get("stopAtrMult", 0.5)) * atr_now)

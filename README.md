@@ -16,7 +16,7 @@ This folder is the implementation workspace for **Ultimate plan v2.1 (Paper Mode
 
 ## Current status
 - Paper config tuned (ORB active, MR disabled).
-- ORB entryEnd supported (configurable).
+- ORB entryEnd + max OR filters + optional NIFTY VWAP filter.
 - Market-closed guard (NSE holiday + market status cache).
 - Daily/weekly automation via OpenClaw cron.
 - Recovery + auto-start script present.

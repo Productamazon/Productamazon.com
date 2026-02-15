@@ -39,6 +39,8 @@ def node_watchlist(state: TradingState) -> TradingState:
     vol_mult = float(orb.get("volumeMultiplier", 1.2))
     min_or_pct = float(orb.get("minORRangePct", 0.15))
     min_or_atr = float(orb.get("minORtoATR", 0.0))
+    max_or_pct = float(orb.get("maxORRangePct", 0.0))
+    max_or_atr = float(orb.get("maxORtoATR", 0.0))
 
     out = BASE / "signals" / f"watchlist_{d.strftime('%Y-%m-%d')}.json"
 
@@ -65,6 +67,8 @@ def node_watchlist(state: TradingState) -> TradingState:
         volume_multiplier=vol_mult,
         min_or_range_pct=min_or_pct,
         min_or_atr_ratio=min_or_atr,
+        max_or_range_pct=max_or_pct,
+        max_or_atr_ratio=max_or_atr,
     )
     save_watchlist(signals, out, top_n=15)
 
