@@ -27,3 +27,4 @@ __pycache__/
 
 # Cached data
 /data/cache/
+/data/nse/
