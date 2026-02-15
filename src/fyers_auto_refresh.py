@@ -103,21 +103,21 @@ def refresh_access_token() -> Tuple[bool, str]:
     if not bearer:
         return False, "Missing access_token after PIN verify"
 
-    # 4) Request auth_code
+    # 4) Request auth_code (API v3)
     headers = {"authorization": f"Bearer {bearer}", "content-type": "application/json; charset=UTF-8"}
     data4 = {
         "fyers_id": username,
-        "app_id": app_id[:-4],
+        "app_id": app_id.split("-")[0],
         "redirect_uri": redirect_uri,
         "appType": "100",
         "code_challenge": "",
-        "state": "auto_refresh",
+        "state": "sample_state",
         "scope": "",
         "nonce": "",
         "response_type": "code",
         "create_cookie": True,
     }
-    r4 = session.post("https://api.fyers.in/api/v2/token", headers=headers, json=data4, timeout=20)
+    r4 = session.post("https://api-t1.fyers.in/api/v3/token", headers=headers, json=data4, timeout=20)
     try:
         url = r4.json().get("Url") or r4.json().get("url")
     except Exception:
