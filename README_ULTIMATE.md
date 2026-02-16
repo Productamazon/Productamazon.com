@@ -1,6 +1,6 @@
 # Ultimate README — Trading Bot (Paper Mode)
 
-Last updated: 2026-02-15 19:20 UTC
+Last updated: 2026-02-16 02:26 UTC
 Owner: Mintu (IST) • Assistant: Laddu 🔥
 
 This file is the **handoff summary** for the next session so it can pick up immediately.
@@ -170,6 +170,7 @@ Auto-start on Windows login (created):
   - Candidate config for peak learning: `config/config.paper_orb_peak.json` (entryEnd 10:30, vol_mult 1.4, stopAtr 0.6, max OR filters, requireNiftyVwap, stocksInPlay).
   - 10‑day backtest (peak config): Trades 4, Total R -0.64, Avg R -0.16, PnL ₹-64.28.
     Saved: /mnt/g/New folder/New folder/trading_bot/reports/backtests/backtest_30d_2026-02-16_004302_paper_orb_peak.json
+  - last_n_trading_days now falls back to cached data (prevents empty backtests when API returns no data).
 - Git hygiene:
   - Added `data/nse/` cache to `.gitignore` (avoid committing live cache).
 - Pushed changes to GitHub (main updated).

@@ -21,10 +21,15 @@ MARKET_STATUS_PATH = NSE_CACHE_DIR / "market_status.json"
 
 def _has_market_data(d: date, symbol: str = "NSE:NIFTY50-INDEX") -> bool:
     ds = d.strftime("%Y-%m-%d")
-    # Offline mode: rely on cached data if present
+
+    # Always check cache first (cheap)
+    df_cached = get_intraday(symbol, ds, "5", lambda: [])
+    if not df_cached.empty:
+        return True
+
+    # Offline mode: rely on cached data only
     if os.environ.get("FYERS_OFFLINE", "0") == "1":
-        df = get_intraday(symbol, ds, "5", lambda: [])
-        return not df.empty
+        return False
 
     fyers = get_fyers()
     resp = fyers.history(
