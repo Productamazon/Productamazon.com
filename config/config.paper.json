@@ -25,7 +25,13 @@
   },
   "filters": {
     "niftySymbol": "NSE:NIFTY50-INDEX",
-    "requireNiftyVwap": false
+    "requireNiftyVwap": false,
+    "stocksInPlay": {
+      "enabled": false,
+      "lookbackDays": 14,
+      "minRvol": 1.5,
+      "topN": 20
+    }
   },
   "strategies": {
     "ORB": {

@@ -20,6 +20,7 @@ from regime import classify_regime
 from speed_filters import prefilter_symbols
 from pathlib import Path
 from trading_days import is_trading_day, is_market_open
+from stocks_in_play import get_stocks_in_play
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 BASE = Path(__file__).resolve().parents[1]
@@ -217,7 +218,18 @@ def find_best_signal(now_ist: datetime) -> Optional[dict]:
     or_start_utc = pd.Timestamp(or_start_ist.astimezone(timezone.utc))
     or_end_utc = pd.Timestamp(or_end_ist.astimezone(timezone.utc))
 
-    for sym in prefilter_symbols(load_universe()):
+    universe = prefilter_symbols(load_universe())
+    sip_cfg = flt.get("stocksInPlay", {})
+    if bool(sip_cfg.get("enabled", False)):
+        universe = get_stocks_in_play(
+            now_ist.date(),
+            universe,
+            lookback_days=int(sip_cfg.get("lookbackDays", 14)),
+            min_rvol=float(sip_cfg.get("minRvol", 1.5)),
+            top_n=int(sip_cfg.get("topN", 20)),
+        )
+
+    for sym in universe:
         df = fetch_intraday(sym, d)
         if df.empty or len(df) < 20:
             continue

@@ -14,6 +14,7 @@ from indicators import to_ohlcv_df, atr, opening_range
 from universe import load_universe
 from data_quality import clean_ohlcv_df
 from data_cache import get_intraday
+from stocks_in_play import get_stocks_in_play
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 
@@ -70,6 +71,7 @@ def scan_orb_for_date(
     min_or_atr_ratio: float = 0.0,
     max_or_range_pct: float = 0.0,
     max_or_atr_ratio: float = 0.0,
+    symbols: Optional[list[str]] = None,
 ) -> list[ORBSignal]:
     """Scan NIFTY50 for ORB breakout candidates.
 
@@ -82,7 +84,8 @@ def scan_orb_for_date(
 
     results: list[ORBSignal] = []
 
-    for symbol in load_universe():
+    universe = symbols if symbols is not None else load_universe()
+    for symbol in universe:
         df = fetch_intraday_5m(symbol, d)
         if df.empty or len(df) < 5:
             continue

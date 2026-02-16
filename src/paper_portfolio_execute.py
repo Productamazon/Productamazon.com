@@ -21,6 +21,7 @@ from versioning import build_version_stamp
 from regime import classify_regime
 from mean_reversion import simulate_mean_reversion, MRTrade
 from swing_trend import fetch_daily, swing_breakout_signal, swing_pullback_signal
+from stocks_in_play import get_stocks_in_play
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 BASE = Path(__file__).resolve().parents[1]
@@ -291,7 +292,18 @@ def run_day(d: date) -> dict:
         allow_long = bool(orb_cfg.get("allowLong", True)) and reg.trend_dir in ("bull", "flat")
         allow_short = bool(orb_cfg.get("allowShort", True)) and reg.trend_dir in ("bear", "flat")
 
-        for sym in load_universe():
+        universe = load_universe()
+        sip_cfg = flt_cfg.get("stocksInPlay", {})
+        if bool(sip_cfg.get("enabled", False)):
+            universe = get_stocks_in_play(
+                d,
+                universe,
+                lookback_days=int(sip_cfg.get("lookbackDays", 14)),
+                min_rvol=float(sip_cfg.get("minRvol", 1.5)),
+                top_n=int(sip_cfg.get("topN", 20)),
+            )
+
+        for sym in universe:
             df = fetch_intraday(sym, d)
             if df.empty:
                 continue

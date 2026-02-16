@@ -26,6 +26,8 @@ from daily_report import main as daily_main
 from nightly_backtest import run as nightly_run
 from config import load_config
 from trading_days import is_trading_day, is_market_open
+from stocks_in_play import get_stocks_in_play
+from universe import load_universe
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 BASE = Path(__file__).resolve().parents[1]
@@ -43,6 +45,18 @@ def node_watchlist(state: TradingState) -> TradingState:
     max_or_atr = float(orb.get("maxORtoATR", 0.0))
 
     out = BASE / "signals" / f"watchlist_{d.strftime('%Y-%m-%d')}.json"
+
+    sip_cfg = cfg.get("filters", {}).get("stocksInPlay", {})
+    use_sip = bool(sip_cfg.get("enabled", False))
+    sip_syms = None
+    if use_sip:
+        sip_syms = get_stocks_in_play(
+            d,
+            load_universe(),
+            lookback_days=int(sip_cfg.get("lookbackDays", 14)),
+            min_rvol=float(sip_cfg.get("minRvol", 1.5)),
+            top_n=int(sip_cfg.get("topN", 20)),
+        )
 
     # Market closed guard
     if not is_trading_day(d):
@@ -69,6 +83,7 @@ def node_watchlist(state: TradingState) -> TradingState:
         min_or_atr_ratio=min_or_atr,
         max_or_range_pct=max_or_pct,
         max_or_atr_ratio=max_or_atr,
+        symbols=sip_syms,
     )
     save_watchlist(signals, out, top_n=15)
 

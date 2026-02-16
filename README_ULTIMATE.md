@@ -1,6 +1,6 @@
 # Ultimate README — Trading Bot (Paper Mode)
 
-Last updated: 2026-02-15 19:16 UTC
+Last updated: 2026-02-15 19:20 UTC
 Owner: Mintu (IST) • Assistant: Laddu 🔥
 
 This file is the **handoff summary** for the next session so it can pick up immediately.
@@ -165,7 +165,9 @@ Auto-start on Windows login (created):
 - ORB filters extended:
   - Added `entryEnd`, `maxORRangePct`, `maxORtoATR` to ORB config.
   - Added optional `filters.requireNiftyVwap` (trend alignment) and enforced in approval/backtest/watchlist.
-  - Candidate config for peak learning: `config/config.paper_orb_peak.json` (entryEnd 10:30, vol_mult 1.4, stopAtr 0.6, max OR filters, requireNiftyVwap).
+  - Added **stocks-in-play filter** (abnormal first-5m volume vs 14-day average):
+    `filters.stocksInPlay` → enabled/minRvol/topN. Applied in approval, watchlist, backtest.
+  - Candidate config for peak learning: `config/config.paper_orb_peak.json` (entryEnd 10:30, vol_mult 1.4, stopAtr 0.6, max OR filters, requireNiftyVwap, stocksInPlay).
   - 10‑day backtest (peak config): Trades 4, Total R -0.64, Avg R -0.16, PnL ₹-64.28.
     Saved: /mnt/g/New folder/New folder/trading_bot/reports/backtests/backtest_30d_2026-02-16_004302_paper_orb_peak.json
 - Git hygiene:
